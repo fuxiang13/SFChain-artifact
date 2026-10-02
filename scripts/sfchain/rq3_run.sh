@@ -4,7 +4,7 @@
 #   base|d100|d500|d1000|dual500|bs100|bs400|bs500|disc|refuse
 set -u
 SC="${1:?scenario}"; R="${2:?round}"
-BASE="$(cd "$(dirname "$0")/../../.." && pwd)"; cd "$BASE"
+BASE="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$BASE"
 BIN=$BASE/bin; LOGDIR=$BASE/logs
 mkdir -p "$LOGDIR"
 cd "$BASE/prototype"

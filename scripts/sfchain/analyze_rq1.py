@@ -10,7 +10,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parents[3]
+BASE = Path(__file__).resolve().parents[2]
 CONS = re.compile(r"height=(\d+), chain=(\w+), sigs=(\d+), hash=([a-f0-9]+), final_ns=(\d+)")
 ANCHOR = re.compile(r"^(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\.\d+).*block hash computed, txType=(\w+), height=(\d+), hash=([a-f0-9]+)")
 

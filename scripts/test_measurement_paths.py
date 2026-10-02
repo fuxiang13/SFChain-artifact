@@ -8,11 +8,13 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+ROOT = Path(__file__).resolve().parents[1]
+SFCHAIN_SCRIPTS = ROOT / "scripts" / "sfchain"
+sys.path.insert(0, str(SFCHAIN_SCRIPTS))
 from analyze_rq2 import analyze
 
-ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
-    "sf_round", ROOT / "baseline/fiscobcos/scripts/analyze_e1g.py")
+    "sf_round", SFCHAIN_SCRIPTS / "analyze_rq1.py")
 sf = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sf)
 

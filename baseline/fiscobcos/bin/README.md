@@ -1,4 +1,4 @@
-# bin/ — FISCO BCOS node binary
+# bin/ - FISCO BCOS node binary
 
 This directory intentionally does **not** ship the official FISCO BCOS node
 executable (53 MB). It contains only the official `build_chain.sh`

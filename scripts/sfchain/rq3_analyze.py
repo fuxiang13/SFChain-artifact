@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-BASE = str(Path(__file__).resolve().parents[3])
+BASE = str(Path(__file__).resolve().parents[2])
 LOGS = os.path.join(BASE, "logs")
 SEAL = re.compile(r"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\.\d+).*block created successfully, txType=(\w+), height=(\d+)")
 CONS = re.compile(r"(\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\.\d+).*consensus completed, height=(\d+), chain=(\w+)")

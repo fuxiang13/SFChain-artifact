@@ -36,9 +36,13 @@ labels. The latter resets Fabric each round, unlike the timing campaign.
 | 512 | 201.95 | 2420.58 | 5.7632 | 0.7448 |
 | 1024 | 238.24 | 2651.88 | 11.3778 | 1.4808 |
 
-The native helper and `scripts/analyze_rq2.py` support the included SFChain
-implementation. They do not supply the complete Config A campaign; see the
-setup document. These values must not be inferred from an RQ1 run.
+The native SFChain helper and `scripts/sfchain/analyze_rq2.py` support both configurations:
+run the shared procedure with `SFCHAIN_SYNC_BLOCK_PERSIST=1` for
+Configuration A and with the variable unset for Configuration B. The switch
+changes Management-side block-custody scheduling; DTO processing and
+transaction packaging remain unchanged. The table transcribes the paper's
+reported values, not historical logs shipped with the artifact, and these
+values must not be inferred from an RQ1 run.
 
 ## RQ3: unanimous-witness liveness
 
@@ -47,7 +51,7 @@ The paper reports 216-ms baseline p50; 271/646/1135 ms with
 resuming after reconnection; and no completed attestations among four sealed
 blocks during refusal. These are three-round summaries under the conditions
 in the liveness table. The fault driver and analyzer are
-`baseline/fiscobcos/scripts/rq3_run.sh` and `rq3_analyze.py`.
+`scripts/sfchain/rq3_run.sh` and `scripts/sfchain/rq3_analyze.py`.
 
 ## RQ4: preloaded verification kernel
 

@@ -14,6 +14,7 @@ $Base = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $SFDir = Join-Path $Base "deploy\sf-docker"
 $FiscoDir = Join-Path $Base "baseline\fiscobcos"
 $FabricDir = Join-Path $Base "baseline\fabric"
+$ScriptDir = Join-Path $Base "scripts"
 $env:BS="400"
 foreach($name in @("SFCHAIN_RQ1","SFCHAIN_RQ1_DEBUG","ENDORSE_DIRECT","PACK_TICK",
                    "LOG_POLL","LOG_THRESHOLD","LOG_PACING")) {
@@ -39,7 +40,7 @@ function Storage([string]$Platform,[string]$Stage,[string]$Dir) {
     if (-not $MeasureStorage) { return }
     $mode=$Platform
     if($mode -eq "fiscobcos"){$mode="fisco"}
-    $a=@("$FiscoDir\scripts\storage_report.py","--$mode-only",
+    $a=@("$ScriptDir\storage_report.py","--$mode-only",
         "--sfchain-mysql","127.0.0.1","13306","root","qwer@123","sfchain",
         "--logs","$Total","--label","${mode}_$Stage","--out",$Dir)
     if($Stage -eq "after") { $a+=@("--baseline","$Dir\storage_${mode}_baseline.json") }

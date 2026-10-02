@@ -16,7 +16,7 @@ function docker {
 }
 $base   = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $sfd    = "$base\deploy\sf-docker"
-$fisco  = "$base\baseline\fiscobcos"
+$scripts = "$base\scripts"
 $env:BS = "$BS"
 $env:SFCHAIN_RQ1 = "1"
 $env:ENDORSE_DIRECT = "http://sf-mgmt:9080"
@@ -64,7 +64,7 @@ foreach ($t in $tables) { & docker $MY -e "TRUNCATE sfchain.$t" 2>$null | Out-Nu
 & docker $MY -e "TRUNCATE sfchain.transactions" | Out-Null
 Write-Output "tables cleared (blocks/headers/logs/transactions)"
 if ($StorageDir) {
-    python "$fisco\scripts\storage_report.py" --sfchain-only --sfchain-mysql 127.0.0.1 13306 root qwer@123 sfchain --logs $Total --label sfchain_baseline --out $StorageDir
+    python "$scripts\storage_report.py" --sfchain-only --sfchain-mysql 127.0.0.1 13306 root qwer@123 sfchain --logs $Total --label sfchain_baseline --out $StorageDir
     if ($LASTEXITCODE -ne 0) { throw "Storage baseline failed" }
 }
 
@@ -195,9 +195,9 @@ if (Test-Path $log) {
 # Freeze NOW, not after another round has truncated this database.
 $required = "attestation"
 if ($AnchorSuccessor) { $required = "anchored" }
-python "$fisco\scripts\analyze_e1g.py" "r$Round" --bs $BS --total $Total --log $log --out $Out --require $required
+python "$scripts\sfchain\analyze_rq1.py" "r$Round" --bs $BS --total $Total --log $log --out $Out --require $required
 if ($LASTEXITCODE -ne 0) { throw "Invalid round r$Round; retained output/logs for diagnosis" }
 if ($StorageDir) {
-    python "$fisco\scripts\storage_report.py" --sfchain-only --sfchain-mysql 127.0.0.1 13306 root qwer@123 sfchain --logs $Total --label sfchain_after --out $StorageDir --baseline "$StorageDir\storage_sfchain_baseline.json"
+    python "$scripts\storage_report.py" --sfchain-only --sfchain-mysql 127.0.0.1 13306 root qwer@123 sfchain --logs $Total --label sfchain_after --out $StorageDir --baseline "$StorageDir\storage_sfchain_baseline.json"
     if ($LASTEXITCODE -ne 0) { throw "Storage after measurement failed" }
 }

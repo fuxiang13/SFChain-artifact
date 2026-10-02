@@ -2,7 +2,7 @@
 # SFChain E1 single test: cold start 4 nodes (no endorsement), wait drain, stop, save logs
 # Usage: bash sfchain_e1_test.sh <block_size>
 set -u
-BASE="$(cd "$(dirname "$0")/../../.." && pwd)"
+BASE="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$BASE"
 BIN=$BASE/bin
 CFG=$BASE/prototype/configs

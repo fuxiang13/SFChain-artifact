@@ -72,10 +72,22 @@ milestone is also reported, as in the paper.
 
 - `prototype/`: SFChain, workload and identity generators, fault proxy, and audit tool.
 - `deploy/sf-docker/`: SFChain container configuration and RQ1 round driver.
-- `baseline/fiscobcos/`: FISCO contract, ingest driver, deployment, and native SFChain RQ2/RQ3 helpers.
+- `baseline/fiscobcos/`: FISCO BCOS contract, ingest driver, deployment, and reset scripts.
 - `baseline/fabric/`: four-organization SmartBFT deployment and role-routed chaincode.
-- `scripts/`: workspace preparation, builds, RQ1 summaries, and RQ2 analysis.
+- `scripts/`: workspace preparation, builds, SFChain experiment drivers and analyzers,
+  baseline normalizers, and storage analysis.
 - `docs/EXPERIMENT_SETUP.md`: setup, procedures, and reproduction limits.
 - `docs/RESULTS.md`: reported values and their measurement scope.
 - `docs/FILE_MAP.md`: mapping from paper measurements to source files.
 
+RQ2 uses one shared native SFChain procedure for both persistence
+configurations. Configuration B is the default asynchronous Management-side
+block-custody mode. Configuration A is selected with
+`SFCHAIN_SYNC_BLOCK_PERSIST=1` before starting the Management process. The
+switch is read by Management only: DTO nodes do not package transactions in
+the RQ2 helper. They receive the Management-created block or header, validate
+it, retain their role evidence, and return their role signatures. The
+workload, block sizes, DTO behavior, timing boundary, and analyzer are shared
+by both configurations; only Management-side block-custody scheduling differs.
+The commands generate new local outputs and do not recover the historical logs
+used for the paper's reported values.

@@ -84,7 +84,8 @@ Input rows, transaction pools, images, runtime logs, keys, and chaincode
 build caches are excluded. Trigger records remain included. Use decimal MB
 (`bytes / 1,000,000`), not the human-readable binary-unit display.
 
-The RQ1 round driver invokes `analyze_e1g.py` with an explicit output path.
+The RQ1 round driver invokes `scripts/sfchain/analyze_rq1.py` with an explicit
+output path.
 Do not re-analyze a previous round's log against a subsequent database.
 `aggregate_frozen_rq1.py` reads only the saved summaries and fails on
 incomplete counts, invalid endpoints, failures, or non-finite metrics.
@@ -95,25 +96,102 @@ The paper varies block size over 128, 256, 512, and 1,024. Its measurement
 runs from block-build start to four-role attestation completion; endorsement,
 source reading, and successor anchoring are excluded.
 
-The supplied `sfchain_e1_test.sh <block-size> [run-tag]` launches native
-processes against a pre-endorsed transaction pool. Use separate tags for
-rounds; it refuses to overwrite an existing Management log. Analyze explicit
-log paths with:
+The two RQ2 configurations use the same pre-endorsed workload, native helper,
+node configuration, block sizes, DTO behavior, timing boundary, and analyzer.
+The A/B switch is deliberately applied only at Management:
+
+| Configuration | Management environment | RQ2 meaning |
+|---|---|---|
+| Configuration B | `SFCHAIN_SYNC_BLOCK_PERSIST` unset or not equal to `1` | Management enqueues block-custody writes to its asynchronous persistence worker (default) |
+| Configuration A | `SFCHAIN_SYNC_BLOCK_PERSIST=1` | Management executes the block-custody write synchronously before continuing the Management path |
+
+DTO nodes do not package transactions in this study. Management stages and
+packages the pre-endorsed transactions; DTO nodes receive the resulting block
+or header, validate it, retain their role evidence through the common DTO
+path, and return their role signatures. Therefore the A/B comparison holds
+transaction packaging, role witnessing, DTO processing, network behavior, and
+the workload fixed, and changes only the Management-side block-custody
+scheduling.
+
+### Shared preparation
+
+Build the native binaries and initialize an isolated test database as
+described above. With all nodes stopped, create the pre-endorsed RQ2 pool:
 
 ```bash
-python3 scripts/analyze_rq2.py logs/management_rq2_B_bs128_r1.log --out runs/rq2_B_bs128_r1.json
+bin/preparepool \
+  -dsn 'root:qwer@123@tcp(127.0.0.1:3306)/sfchain' \
+  -total <RQ2-total-divisible-by-four>
+```
+
+Use the same total and the same staged pool for the A/B runs in a round. The
+preparation is outside the measured interval. The native helper clears block
+and header tables before each run and resets the transaction rows to
+`endorsed`, so the same staged rows can be reused for the paired run. If a
+fresh workload is desired for another round, run `preparepool` again before
+that round. Never point these commands at a production database.
+
+### Shared run procedure
+
+For each configuration and each block size in `{128, 256, 512, 1,024}`:
+
+1. Stop any previous native nodes and ensure the dedicated database is
+   reachable.
+2. Set or unset `SFCHAIN_SYNC_BLOCK_PERSIST` according to the table above.
+3. Run `scripts/sfchain/sfchain_e1_test.sh <block-size> <run-tag>`. It starts the three DTO
+   processes first, starts Management last so that the pre-endorsed
+   Management packaging pool is ready, waits for all chains to drain and for
+   attestation events to catch up, then stops the processes and retains the
+   logs.
+4. Use a fresh alphanumeric run tag for every configuration, block size, and
+   repetition; the helper refuses to overwrite an existing Management log.
+5. Analyze the resulting Management log with `analyze_rq2.py`.
+
+Configuration B uses the shared default:
+
+```bash
+unset SFCHAIN_SYNC_BLOCK_PERSIST
+bash scripts/sfchain/sfchain_e1_test.sh 128 rq2_B_bs128_r1
+```
+
+Configuration A uses the same helper and workload, with only the
+Management-side switch changed:
+
+```bash
+SFCHAIN_SYNC_BLOCK_PERSIST=1 \
+  bash scripts/sfchain/sfchain_e1_test.sh 128 rq2_A_bs128_r1
+```
+
+Repeat these commands for block sizes `256`, `512`, and `1024`, and use
+distinct tags for additional repetitions. The environment variable must be
+set before the helper starts Management; changing it after the processes have
+started does not change an ongoing run. For example:
+
+```bash
+python3 scripts/sfchain/analyze_rq2.py \
+  logs/management_rq2_B_bs128_r1.log \
+  --out runs/rq2_B_bs128_r1.json
+
+python3 scripts/sfchain/analyze_rq2.py \
+  logs/management_rq2_A_bs128_r1.log \
+  --out runs/rq2_A_bs128_r1.json
 ```
 
 The analyzer requires matched build/count/seal/attestation events and counts
 transactions, not blocks, when calculating TPS. It reports each input round
-separately.
+separately. Throughput is the total transaction count divided by the
+Management-side window from the first block-build start to the last four-role
+attestation completion. Mean and p50 block latency use matched per-block
+start and attestation events. Incomplete or unmatched event sets are rejected
+instead of being silently treated as complete results.
 
-**Reproduction limit:** the included helper exercises the asynchronous
-implementation. It is not the complete two-configuration enterprise-LAN
-campaign reported in the paper. `SFCHAIN_SYNC_BLOCK_PERSIST=1` changes block
-custody writes only; it does not restore Configuration A's database reread
-and all synchronous dependencies. It must not be presented as reproducing
-Configuration A or its published numbers.
+The supplied commands reproduce the RQ2 procedure and both
+Management-side persistence modes. They generate new outputs under the
+selected environment; the artifact does not contain the historical logs used
+for the paper's reported values. For a multi-host enterprise-LAN deployment,
+perform the same preparation and launch steps on the corresponding hosts,
+collect the Management logs in one analysis workspace, and preserve the same
+configuration variable and run-tag mapping.
 
 ## 5. RQ3 fault injection
 
@@ -128,8 +206,8 @@ bin/preparepool -dsn 'root:qwer@123@tcp(127.0.0.1:3306)/sfchain' -total $((4*200
 
 This is the RQ3 workload (four roles, five 200-record blocks per role), not
 an alternative RQ1 workload. For each scenario below run
-`bash baseline/fiscobcos/scripts/rq3_run.sh <scenario> <round>` for rounds
-1, 2, and 3, then `python3 baseline/fiscobcos/scripts/rq3_analyze.py`.
+`bash scripts/sfchain/rq3_run.sh <scenario> <round>` for rounds 1, 2, and 3,
+then `python3 scripts/sfchain/rq3_analyze.py`.
 Run native processes in one timezone. The proxy includes the date in its
 resume log, so analysis uses the date of each run.
 
@@ -156,7 +234,7 @@ With native nodes stopped and the native database initialized, run:
 
 ```bash
 bin/preparepool -dsn 'root:qwer@123@tcp(127.0.0.1:3306)/sfchain' -total $((4*100*10))
-SFCHAIN_PACK_TICK=1s bash baseline/fiscobcos/scripts/sfchain_e1_test.sh 100 audit
+SFCHAIN_PACK_TICK=1s bash scripts/sfchain/sfchain_e1_test.sh 100 audit
 bin/auditverify -host 127.0.0.1:3306 -user root -pass 'qwer@123' -config prototype/configs/management-node.yaml -chain management -header-source development -iters 200
 ```
 
