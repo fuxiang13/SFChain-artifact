@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+/bin/
+/logs/
+/runs/
+/baseline/fabric/results/
+/baseline/fabric/bin/
+/baseline/fabric/config/
+/baseline/fabric/*.tar.gz
+/baseline/fabric/net/organizations/
+/baseline/fabric/net/channel-artifacts/
+/baseline/fabric/loadgen/fabricload
+/baseline/fiscobcos/results/
+/baseline/fiscobcos/nodes/
+/baseline/fiscobcos/loadgen/lib/
+/baseline/fiscobcos/bin/fisco-bcos
+/baseline/fiscobcos/bin/*.tar.gz

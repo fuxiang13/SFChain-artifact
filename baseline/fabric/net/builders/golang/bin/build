@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec 1>&2
+CHAINCODE_SOURCE_DIR="$1"
+CHAINCODE_METADATA_DIR="$2"
+BUILD_OUTPUT_DIR="$3"
+GO_PACKAGE_PATH="$(grep -o '"path": *"[^"]*"' "${CHAINCODE_METADATA_DIR}/metadata.json" | head -1 | cut -d'"' -f4)"
+cd "${CHAINCODE_SOURCE_DIR}/src"
+export CGO_ENABLED=0
+go build -mod=vendor -o "${BUILD_OUTPUT_DIR}/chaincode" "${GO_PACKAGE_PATH}"

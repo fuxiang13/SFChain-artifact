@@ -1,0 +1,38 @@
+node:
+  id: "operations-node-1"
+  type: "operations"
+  port: 9083
+  address: "sf-ops:9083"
+  public_key: "978bb4e44cf0759df8a10fd15f36e40ce031774a43f52b4e7e00e9fc952c6ba97b0ea31eee710d6362c610a2e6ddd8f1"
+  private_key: "4d72eae87ee72a884a774466fb1abda27deab5803e321fbc258197a92b92ddc6"
+
+network:
+  nodes:
+    - id: "management-node-1"
+      type: "management"
+      address: "sf-mgmt:9080"
+      public_key: "9108d87763925f87debe1b4a1eec84a93f0981d7201628bdd60b3af6858545dd0f0844c4601d02dacc12f4bf89f17a6c"
+    - id: "development-node-1"
+      type: "development"
+      address: "sf-dev:9081"
+      public_key: "8deebf8f2258214fb235c25ce9336d476e0e748684d98bbb52b9731683ddccf71b85d94aab48904656992cdf3101dd59"
+    - id: "test-node-1"
+      type: "test"
+      address: "sf-test:9082"
+      public_key: "8195c36a2655d64070a8e75f11d0cd9f3d6d00bc0c4978fb3c01d1bbbf5c94e95b673adeb646a147fb442f7c71c4aaf9"
+    - id: "operations-node-1"
+      type: "operations"
+      address: "sf-ops:9083"
+      public_key: "978bb4e44cf0759df8a10fd15f36e40ce031774a43f52b4e7e00e9fc952c6ba97b0ea31eee710d6362c610a2e6ddd8f1"
+
+database:
+  type: "mysql"
+  host: "sf-mysql"
+  port: 3306
+  user: "root"
+  password: "qwer@123"
+  dbname: "sfchain"
+  charset: "utf8mb4"
+
+consensus:
+  min_signatures: 4

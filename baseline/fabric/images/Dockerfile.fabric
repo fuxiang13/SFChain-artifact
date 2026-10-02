@@ -1,0 +1,5 @@
+FROM debian:bookworm-slim
+COPY bin /usr/local/bin
+COPY config /etc/hyperledger/fabric
+ENV FABRIC_CFG_PATH=/etc/hyperledger/fabric
+RUN chmod +x /usr/local/bin/* || true

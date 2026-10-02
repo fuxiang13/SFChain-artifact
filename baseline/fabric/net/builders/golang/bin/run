@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec 1>&2
+BLD_DIR="$1"
+LAUNCH_DIR="$2"
+JQ="$(dirname "$0")/jq"
+CC_ID="$("$JQ" -r .chaincode_id "$LAUNCH_DIR/chaincode.json")"
+PEER_ADDR="$("$JQ" -r .peer_address "$LAUNCH_DIR/chaincode.json")"
+"$JQ" -r .client_cert "$LAUNCH_DIR/chaincode.json" > "$LAUNCH_DIR/client.crt"
+"$JQ" -r .client_key  "$LAUNCH_DIR/chaincode.json" > "$LAUNCH_DIR/client.key"
+"$JQ" -r .root_cert   "$LAUNCH_DIR/chaincode.json" > "$LAUNCH_DIR/root.crt"
+export CORE_CHAINCODE_ID_NAME="$CC_ID"
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_TLS_ROOTCERT_FILE="$LAUNCH_DIR/root.crt"
+export CORE_TLS_CLIENT_CERT_FILE="$LAUNCH_DIR/client.crt"
+export CORE_TLS_CLIENT_KEY_FILE="$LAUNCH_DIR/client.key"
+exec "$BLD_DIR/chaincode" -peer.address="$PEER_ADDR"

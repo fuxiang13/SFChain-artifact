@@ -1,0 +1,106 @@
+name: sfe1d
+services:
+  sf-mysql:
+    image: mysql:8.0
+    container_name: sf-mysql
+    restart: "no"
+    ports:
+      - "13306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: qwer@123
+      MYSQL_DATABASE: sfchain
+    command: ["--default-authentication-plugin=mysql_native_password", "--bind-address=0.0.0.0",
+              "--innodb-flush-log-at-trx-commit=2"]
+    volumes:
+      - sfmysql-data:/var/lib/mysql
+      - ../../prototype/mysql_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-pqwer@123"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+  sf-dev:
+    image: debian:bookworm-slim
+    container_name: sf-dev
+    working_dir: /app
+    restart: "no"
+    volumes:
+      - ../../bin:/app/bin:ro
+      - ./configs:/app/configs
+      - ../../logs:/app/logs
+    environment:
+      SFCHAIN_NET: http
+      SFCHAIN_RQ1: ${SFCHAIN_RQ1:-}
+      SFCHAIN_RQ1_TOTAL: ${SFCHAIN_RQ1_TOTAL:-20000}
+      SFCHAIN_RQ1_RUN_ID: ${SFCHAIN_RQ1_RUN_ID:-rq1}
+      SFCHAIN_RQ1_DEBUG: ${SFCHAIN_RQ1_DEBUG:-}
+      BS: ${BS}
+    command: ["sh", "-c", "./bin/sfchain -config configs/development-d.yaml > logs/development_e1d_bs$${BS}.log 2>&1"]
+  sf-test:
+    image: debian:bookworm-slim
+    container_name: sf-test
+    working_dir: /app
+    restart: "no"
+    volumes:
+      - ../../bin:/app/bin:ro
+      - ./configs:/app/configs
+      - ../../logs:/app/logs
+    environment:
+      SFCHAIN_NET: http
+      BS: ${BS}
+    command: ["sh", "-c", "./bin/sfchain -config configs/test-d.yaml > logs/test-node_e1d_bs$${BS}.log 2>&1"]
+  sf-ops:
+    image: debian:bookworm-slim
+    container_name: sf-ops
+    working_dir: /app
+    restart: "no"
+    volumes:
+      - ../../bin:/app/bin:ro
+      - ./configs:/app/configs
+      - ../../logs:/app/logs
+    environment:
+      SFCHAIN_NET: http
+      BS: ${BS}
+    command: ["sh", "-c", "./bin/sfchain -config configs/operations-d.yaml > logs/operations_e1d_bs$${BS}.log 2>&1"]
+  sf-mgmt:
+    image: debian:bookworm-slim
+    container_name: sf-mgmt
+    working_dir: /app
+    restart: "no"
+    volumes:
+      - ../../bin:/app/bin:ro
+      - ./configs:/app/configs
+      - ../../logs:/app/logs
+    environment:
+      SFCHAIN_NET: http
+      SFCHAIN_RQ1: ${SFCHAIN_RQ1:-}
+      SFCHAIN_RQ1_TOTAL: ${SFCHAIN_RQ1_TOTAL:-20000}
+      SFCHAIN_RQ1_RUN_ID: ${SFCHAIN_RQ1_RUN_ID:-rq1}
+      SFCHAIN_RQ1_DEBUG: ${SFCHAIN_RQ1_DEBUG:-}
+      SFCHAIN_PACK_TICK: ${PACK_TICK:-100ms}
+      SFCHAIN_LOG_POLL_INTERVAL: ${LOG_POLL:-1s}
+      SFCHAIN_LOG_THRESHOLD: ${LOG_THRESHOLD:-200}
+      SFCHAIN_LOG_PACING: ${LOG_PACING:-0ms}
+      SF_NO_POOL_RELOAD: ${ENDORSE_DIRECT:+1}
+      BS: ${BS}
+    command: ["sh", "-c", "./bin/sfchain -config configs/management-d.yaml > logs/management_e1d_bs$${BS}.log 2>&1"]
+  sf-endorse:
+    image: debian:bookworm-slim
+    container_name: sf-endorse
+    working_dir: /app
+    restart: "no"
+    volumes:
+      - ../../bin:/app/bin:ro
+      - ./configs:/app/configs
+      - ../../logs:/app/logs
+    environment:
+      SF_DB_HOST: sf-mysql
+      SF_DB_PORT: "3306"
+      SF_DB_USER: root
+      SF_DB_PASSWORD: qwer@123
+      SF_DB_NAME: sfchain
+      SFCHAIN_RQ1: ${SFCHAIN_RQ1:-}
+      SF_ENDORSE_DIRECT: ${ENDORSE_DIRECT:-}
+    command: ["sh", "-c", "./bin/endorsement_service -interval 200ms -max-workers 4 > logs/endorsement_e1f.log 2>&1"]
+volumes:
+  sfmysql-data:

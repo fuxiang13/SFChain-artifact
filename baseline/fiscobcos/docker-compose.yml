@@ -1,0 +1,100 @@
+# FISCO BCOS 3.x four-node network + load-test tool (SFChain performance-comparison environment)
+#
+# Nodes use fixed IPs (matching the build_chain.sh -l generated configuration):
+#   node0 172.25.0.11  RPC host port 20200
+#   node1 172.25.0.12  RPC host port 20201
+#   node2 172.25.0.13  RPC host port 20202
+#   node3 172.25.0.14  RPC host port 20203
+#
+# Run scripts/generate_nodes.sh first to generate the nodes/ directory.
+# Start:   docker compose up -d
+# Load test: docker compose run --rm loadgen -action deploy
+#          docker compose run --rm loadgen -action ingest -mysql-port 13306 -poll 200ms -threshold 1000 -pacing 0 -endorse-evidence=1 -endorse-persist=1 -endorse-interval 200ms -endorse-check=1
+# Stop:    docker compose down
+
+name: fisco-bcos-4nodes
+
+networks:
+  fisco_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+x-node: &node-base
+  image: fisco-bcos-node:v3.17.1
+  restart: unless-stopped
+  working_dir: /data
+  command: ["-c", "config.ini", "-g", "config.genesis"]
+  networks:
+    - fisco_net
+
+services:
+  node0:
+    <<: *node-base
+    container_name: fisco-node0
+    networks:
+      fisco_net:
+        ipv4_address: 172.25.0.11
+    volumes:
+      - ./nodes/172.25.0.11/node0:/data
+    ports:
+      - "20200:20200"
+
+  node1:
+    <<: *node-base
+    container_name: fisco-node1
+    networks:
+      fisco_net:
+        ipv4_address: 172.25.0.12
+    volumes:
+      - ./nodes/172.25.0.12/node0:/data
+    ports:
+      - "20201:20200"
+
+  node2:
+    <<: *node-base
+    container_name: fisco-node2
+    networks:
+      fisco_net:
+        ipv4_address: 172.25.0.13
+    volumes:
+      - ./nodes/172.25.0.13/node0:/data
+    ports:
+      - "20202:20200"
+
+  node3:
+    <<: *node-base
+    container_name: fisco-node3
+    networks:
+      fisco_net:
+        ipv4_address: 172.25.0.14
+    volumes:
+      - ./nodes/172.25.0.14/node0:/data
+    ports:
+      - "20203:20200"
+
+  # Load-test tool (not started by up -d; invoked via docker compose run)
+  loadgen:
+    image: fisco-loadgen:latest
+    profiles: ["perf"]
+    networks:
+      - fisco_net
+    volumes:
+      - ./nodes/172.25.0.11/sdk:/conf:ro
+      - ./results:/results
+    working_dir: /results
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach the host MySQL from inside the container
+    environment:
+      - FISCO_HOST=172.25.0.11   # connect directly to the node0 container
+      - FISCO_PORT=20200
+      - FISCO_CERTS=/conf
+      - FISCO_OUT=/results
+      # MySQL for ingest mode (points at the host MySQL running SFChain; for the formal comparison use the same instance as SFChain)
+      - FISCO_MYSQL_HOST=host.docker.internal
+      - FISCO_MYSQL_PORT=3306
+      - FISCO_MYSQL_USER=root
+      - FISCO_MYSQL_PASSWORD=qwer@123
+      - FISCO_MYSQL_DB=sfchain
+

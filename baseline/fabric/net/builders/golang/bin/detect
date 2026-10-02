@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+exec 1>&2
+CHAINCODE_METADATA_DIR="$2"
+if grep -Eq '"type": *"golang"' "${CHAINCODE_METADATA_DIR}/metadata.json"; then
+    exit 0
+fi
+exit 1

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+exec 1>&2
+BUILD_OUTPUT_DIR="$1"
+RELEASE_OUTPUT_DIR="$2"
+mkdir -p "${RELEASE_OUTPUT_DIR}/bin"
+cp "${BUILD_OUTPUT_DIR}/chaincode" "${RELEASE_OUTPUT_DIR}/bin/chaincode"
+if [ -d "${BUILD_OUTPUT_DIR}/META-INF" ]; then
+    cp -a "${BUILD_OUTPUT_DIR}/META-INF/"* "${RELEASE_OUTPUT_DIR}/"
+fi

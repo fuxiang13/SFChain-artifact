@@ -1,0 +1,7 @@
+FROM golang:1.26-bookworm
+ENV GOPROXY=https://proxy.golang.org,direct
+ENV GOFLAGS=-mod=mod
+ENV GOSUMDB=sum.golang.org
+ENV FABRIC_CFG_PATH=/etc/hyperledger/fabric
+COPY bin /usr/local/bin
+COPY config /etc/hyperledger/fabric
