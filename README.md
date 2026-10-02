@@ -79,7 +79,3 @@ milestone is also reported, as in the paper.
 - `docs/RESULTS.md`: reported values and their measurement scope.
 - `docs/FILE_MAP.md`: mapping from paper measurements to source files.
 
-All paths are relative to this layout. RQ2's supplied native helper runs the
-included asynchronous implementation; it does not reproduce the paper's full
-Configuration A. RQ4's combined audit includes binding checks beyond the
-reported five-step kernel. These limits are detailed in the setup document.
